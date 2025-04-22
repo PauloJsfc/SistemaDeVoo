@@ -2,6 +2,7 @@ package dcx.ufpb.br.paulo.ferreira;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -18,19 +19,19 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         this.gravador = new GravadorDeVoo();
     }
 
-    public void cadastraVoo(String codigoVoo, OrigemVoo origem, DestinoVoo destino, DataSimples data){
+    public void cadastrarVoo(String codigoVoo, OrigemVoo origem, DestinoVoo destino, DataSimples data) throws VooInvalidoException{
 
         if (codigoVoo == null || codigoVoo.isEmpty()) {
-            throw new VooInvalidoException.CodigoInvalidoException("ERRO: Código não encontrado");
+            throw new VooInvalidoException("Código não encontrado");
 
         }else if (origem == null){
-            throw new VooInvalidoException.OrigemInvalidaException("ERRO: Origem não encontrada");
+            throw new VooInvalidoException("Origem não encontrada");
 
         } else if (destino == null) {
-            throw new VooInvalidoException.DestinoInvalidoException("ERRO: origem não encontrada");
+            throw new VooInvalidoException("Destino não encontrado");
 
         } else if (data == null) {
-            throw new VooInvalidoException.DataInvalidaException("ERRO: data inválida");
+            throw new VooInvalidoException("data inválida");
 
         }
 
@@ -46,9 +47,9 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         System.out.println("Voo com codigo: " + novoVoo.getCodigoVoo() + ", cadastrado com sucesso.");
     }
 
-    public void listarVoos(){
+    public void listarVoos() throws VooInvalidoException{
         if (this.voos.isEmpty()){
-            throw new VooInvalidoException("ERRO: Não há Voos cadastrados");
+            throw new VooInvalidoException("Não há Voos cadastrados");
         } else {
             for (Voo v : this.voos) {
                 System.out.println(v);
@@ -56,33 +57,31 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         }
     }
 
-    public void oqDesejaAlterarVoo(){
+    public void oqDesejaAlterarVoo() throws VooInvalidoException {
         Scanner read = new Scanner(System.in);
-        try {
-            String codigoVoo = solicitarCodigoVoo(read);
 
-            Voo voo = buscarVooPorCodigo(codigoVoo);
+        String codigoVoo = solicitarCodigoVoo(read);
 
-            String tipoAlteracao = solicitarTipoAlteracao(read);
+        Voo voo = buscarVooPorCodigo(codigoVoo);
 
-            processarAlteracao(voo, tipoAlteracao, read);
+        String tipoAlteracao = solicitarTipoAlteracao(read);
 
-        } catch (VooInvalidoException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
+
+        processarAlteracao(voo, tipoAlteracao, read);
+
     }
 
     private String solicitarCodigoVoo(Scanner read) {
         System.out.print("Qual o codigo do Voo? ");
-        return read.next();
+        return read.nextLine();
     }
 
     private String solicitarTipoAlteracao(Scanner read) {
         System.out.print("Qual tipo de alteração (Origem, Destino, Data): ");
-        return read.next();
+        return read.nextLine();
     }
 
-    private void processarAlteracao(Voo voo, String tipoAlteracao, Scanner read) {
+    private void processarAlteracao(Voo voo, String tipoAlteracao, Scanner read) throws VooInvalidoException{
         if (tipoAlteracao.equalsIgnoreCase("origem")) {
             alterarOrigem(voo, read);
         } else if (tipoAlteracao.equalsIgnoreCase("destino")) {
@@ -90,55 +89,77 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         } else if (tipoAlteracao.equalsIgnoreCase("data")) {
             alterarData(voo, read);
         } else {
-            throw new VooInvalidoException("ERRO: Tipo de alteração de Voo inválido");
+            throw new VooInvalidoException("Tipo de alteração de Voo inválido");
         }
     }
 
     private void alterarOrigem(Voo voo, Scanner read) {
         System.out.print("Insira a nova Origem" + FORMATO_LUGAR + ": ");
-        voo.setOrigem(new OrigemVoo(read.next(), read.next(), read.next(), read.next()));
+        String origemInput = read.nextLine().trim();
+        String[] origemPartes = origemInput.split(",");
+        if (origemPartes.length < 4) {
+            throw new InputMismatchException("Formato de origem inválido");
+        }
+        OrigemVoo origem = new OrigemVoo(
+                origemPartes[0].trim(),
+                origemPartes[1].trim(),
+                origemPartes[2].trim(),
+                origemPartes[3].trim()
+        );
+        voo.setOrigem(origem);
         System.out.println("Origem do voo " + voo.getCodigoVoo() + " atualizada com sucesso.");
     }
 
     private void alterarDestino(Voo voo, Scanner read) {
         System.out.print("Insira o novo Destino" + FORMATO_LUGAR + ": ");
-        voo.setDestino(new DestinoVoo(read.next(), read.next(), read.next(), read.next()));
+        String destinoInput = read.nextLine().trim();
+        String[] destinoPartes = destinoInput.split(",");
+        if (destinoPartes.length < 4) {
+            throw new InputMismatchException("Formato de destino inválido");
+        }
+        DestinoVoo destino = new DestinoVoo(
+                destinoPartes[0].trim(),
+                destinoPartes[1].trim(),
+                destinoPartes[2].trim(),
+                destinoPartes[3].trim()
+        );
+        voo.setDestino(destino);
         System.out.println("Destino do voo " + voo.getCodigoVoo() + " atualizado com sucesso.");
     }
 
     private void alterarData(Voo voo, Scanner read) {
         System.out.print("Insira a nova Data" + FORMATO_DATA + ": ");
-        voo.setData(new DataSimples(read.next(), read.next()));
+        String dataInput = read.nextLine().trim();
+        String[] dataPartes = dataInput.split(" ");
+        if (dataPartes.length < 2) {
+            throw new InputMismatchException("Formato de data inválido");
+        }
+        DataSimples data = new DataSimples(dataPartes[0], dataPartes[1]);
+        voo.setData(data);
         System.out.println("Data do voo " + voo.getCodigoVoo() + " atualizada com sucesso.");
     }
 
-    private Voo buscarVooPorCodigo(String codigoVoo){
+    private Voo buscarVooPorCodigo(String codigoVoo) throws VooInvalidoException{
         for (Voo v : this.voos){
             if (v.getCodigoVoo().equalsIgnoreCase(codigoVoo)){
                 return v;
             }
         }
-        throw new VooInvalidoException.CodigoInvalidoException("Voo com código " + codigoVoo + " não encontrado.");
+        throw new VooInvalidoException("Voo com código " + codigoVoo + " não encontrado.");
     }
 
-    public void buscarVoos(){
+    public void buscarVoos() throws VooInvalidoException{
         List<Voo> listaVoos = new ArrayList<>();
         Scanner read = new Scanner(System.in);
 
         if (this.voos.isEmpty()){
-            throw new VooInvalidoException("ERRO: Não há Voos cadastrados");
+            throw new VooInvalidoException("Não há Voos cadastrados");
         }
-
-        try {
             String tipoBusca = solicitarTipoBusca(read);
 
             List<Voo> voosBuscados = processarBusca(tipoBusca, read);
 
             listaVoos.addAll(voosBuscados);
-
-        } catch (VooInvalidoException e) {
-            System.out.println(e.getMessage());
-        }
 
         for (Voo v : listaVoos){
             System.out.println(v.toString());
@@ -150,7 +171,7 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         return read.nextLine();
     }
 
-    private List<Voo> processarBusca(String tipoBusca, Scanner read){
+    private List<Voo> processarBusca(String tipoBusca, Scanner read) throws VooInvalidoException{
         if (tipoBusca.equalsIgnoreCase("Codigo")){
             List<Voo> v = new ArrayList<>();
             String codigo = solicitarCodigoVoo(read);
@@ -163,31 +184,31 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         } else if (tipoBusca.equalsIgnoreCase("Data")) {
             return buscaPorData(read);
         } else {
-            throw new VooInvalidoException("ERRO: Tipo de busca de Voo inválido");
+            throw new VooInvalidoException("Tipo de busca de Voo inválido");
         }
     }
 
     private String solicitarAtributoOrigem(Scanner read){
         System.out.print("Insira o Atributo de Origem" + FORMATO_LUGAR + ": ");
-        return read.next();
+        return read.nextLine();
     }
 
     private String solicitarAtributoDestino(Scanner read){
         System.out.print("Insira o Atributo de Destino" + FORMATO_LUGAR + ": ");
-        return read.next();
+        return read.nextLine();
     }
 
     private String solicitarData(Scanner read){
         System.out.print("Insira a Data" + FORMATO_DATA + ": ");
-        return read.next();
+        return read.nextLine();
     }
 
     private String solicitarAtributo(Scanner read){
         System.out.println("Qual atributo deseja buscar (Cidade, Estado, Pais, Cep): ");
-        return read.next();
+        return read.nextLine();
     }
 
-    private List<Voo> buscaPorOrigem(Scanner read){
+    private List<Voo> buscaPorOrigem(Scanner read) throws VooInvalidoException{
         String atributoOrigem = solicitarAtributo(read);
         String dadoParaBusca = solicitarAtributoOrigem(read);
         List<Voo> encontrados = new ArrayList<>();
@@ -207,12 +228,12 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
             }
         }
         if (encontrados.isEmpty()) {
-            throw new VooInvalidoException("ERRO: Nenhum voo encontrado para a origem informada");
+            throw new VooInvalidoException("Nenhum voo encontrado para a origem informada");
         }
         return encontrados;
     }
 
-    private List<Voo> buscaPorDestino(Scanner read) {
+    private List<Voo> buscaPorDestino(Scanner read) throws VooInvalidoException{
         String atributoDestino = solicitarAtributo(read);
         String dadoParaBusca = solicitarAtributoDestino(read);
         List<Voo> encontrados = new ArrayList<>();
@@ -232,12 +253,12 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
             }
         }
         if (encontrados.isEmpty()) {
-            throw new VooInvalidoException("ERRO: Nenhum voo encontrado para o destino informado");
+            throw new VooInvalidoException("Nenhum voo encontrado para o destino informado");
         }
         return encontrados;
     }
 
-    private List<Voo> buscaPorData(Scanner read){
+    private List<Voo> buscaPorData(Scanner read) throws VooInvalidoException{
         String dadoParaBusca = solicitarData(read);
         List<Voo> encontrados = new ArrayList<>();
         for (Voo v : this.voos){
@@ -246,16 +267,16 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
             }
         }
         if (encontrados.isEmpty()) {
-            throw new VooInvalidoException("ERRO: Nenhum voo encontrado para a data informada");
+            throw new VooInvalidoException("Nenhum voo encontrado para a data informada");
         }
         return encontrados;
     }
 
-    public boolean cancelaVoo(){
+    public boolean cancelaVoo() throws VooInvalidoException{
         Scanner read = new Scanner(System.in);
 
         if (this.voos.isEmpty()){
-            throw new VooInvalidoException("ERRO: Não há Voos cadastrados");
+            throw new VooInvalidoException("Não há Voos cadastrados");
         }
 
         String codigoVoo = solicitarCodigoVoo(read);
@@ -265,16 +286,16 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
                 return true;
             }
         }
-        throw new VooInvalidoException.CodigoInvalidoException("Voo com código " + codigoVoo + " não encontrado para cancelamento.");
+        throw new VooInvalidoException("Voo com código " + codigoVoo + " não encontrado para cancelamento.");
     }
     public void gravarVoos() throws IOException {
         this.gravador.gravarVoo(this.voos);
     }
 
-    public void recuperarVoos() throws IOException{
+    public void recuperarVoos() throws IOException, VooInvalidoException {
         List<Voo> voosRecuperados = this.gravador.recuperarVoos();
         for (Voo v : voosRecuperados){
-            this.cadastraVoo(v.getCodigoVoo(),v.getOrigem(),v.getDestino(),v.getData());
+            this.cadastrarVoo(v.getCodigoVoo(),v.getOrigem(),v.getDestino(),v.getData());
         }
     }
 

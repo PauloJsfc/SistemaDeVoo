@@ -1,6 +1,6 @@
 package dcx.ufpb.br.paulo.ferreira;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.io.*;
 public class GravadorDeVoo{
@@ -20,8 +20,8 @@ public class GravadorDeVoo{
             escritor = new BufferedWriter(new FileWriter(this.NomeArquivoVoo));
             //For para salvar todos os voos
             for (Voo v : voos){
-                escritor.write(v.getCodigoVoo()+"#"+v.getData()+
-                        "##"+v.getDestino()+"###"+v.getOrigem()+"\n");
+                escritor.write(v.getCodigoVoo()+"###"+v.getData()+
+                        "###"+v.getDestino()+"###"+v.getOrigem()+"\n");
             }
             //Testando se o escritor está vazio
         } finally {
@@ -31,58 +31,55 @@ public class GravadorDeVoo{
         }
     }
     public List<Voo> recuperarVoos() throws IOException {
-        List<Voo> voos = new ArrayList<>();
         BufferedReader leitor = null;
-
+        List<Voo> voosLidos = new LinkedList<>();
         try {
-            File arquivo = new File(this.NomeArquivoVoo);
-            if (!arquivo.exists()) {
-                return voos; // Retorna lista vazia se o arquivo não existir
-            }
-
             leitor = new BufferedReader(new FileReader(this.NomeArquivoVoo));
-            String linha;
-
-            while ((linha = leitor.readLine()) != null) {
-                String[] partes = linha.split("#", 4);
-                if (partes.length == 4) {
-                    String codigoVoo = partes[0];
-                    String data = partes[1].replace("#", "");
-                    String destino = partes[2].replace("#", "");
-                    String origem = partes[3].replace("#", "");
-
-                    // Separar data e hora
-                    String[] dataHora = data.split(" ");
-                    DataSimples dataSimples = new DataSimples(dataHora[0], dataHora.length > 1 ? dataHora[1] : "00:00");
-
-                    // Separar informações de origem
-                    String[] origemInfo = origem.split(", ");
-                    OrigemVoo origemVoo = new OrigemVoo(
-                            origemInfo.length > 0 ? origemInfo[0] : "Not Found",
-                            origemInfo.length > 1 ? origemInfo[1] : "Not Found",
-                            origemInfo.length > 2 ? origemInfo[2] : "Not Found",
-                            origemInfo.length > 3 ? origemInfo[3] : "Not Found"
-                    );
-
-                    // Separar informações de destino
-                    String[] destinoInfo = destino.split(", ");
-                    DestinoVoo destinoVoo = new DestinoVoo(
-                            destinoInfo.length > 0 ? destinoInfo[0] : "Not Found",
-                            destinoInfo.length > 1 ? destinoInfo[1] : "Not Found",
-                            destinoInfo.length > 2 ? destinoInfo[2] : "Not Found",
-                            destinoInfo.length > 3 ? destinoInfo[3] : "Not Found"
-                    );
-
-                    Voo voo = new Voo(codigoVoo, origemVoo, destinoVoo, dataSimples);
-                    voos.add(voo);
+            String linhaLida;
+            while ((linhaLida = leitor.readLine()) != null){
+                String [] dadosVoo = linhaLida.split("###");
+                if (dadosVoo.length < 4) {
+                    continue;
                 }
+
+                String codigoVoo = dadosVoo[0];
+
+
+                DataSimples dataVoo = new DataSimples();
+                String[] partesData = dadosVoo[1].split(" ");
+                if (partesData.length >= 2) {
+                    dataVoo.setData(partesData[0]);
+                    dataVoo.setHora(partesData[1]);
+                }
+
+                // Extrair destino
+                String[] dadosDestino = dadosVoo[2].split(", ");
+                if (dadosDestino.length < 4) continue;
+                DestinoVoo destino = new DestinoVoo(
+                        dadosDestino[0], // cep
+                        dadosDestino[1], // pais
+                        dadosDestino[2], // estado
+                        dadosDestino[3]  // cidade
+                );
+
+                // Extrair origem
+                String[] dadosOrigem = dadosVoo[3].split(", ");
+                if (dadosOrigem.length < 4) continue;
+                OrigemVoo origem = new OrigemVoo(
+                        dadosOrigem[0], // cep
+                        dadosOrigem[1], // pais
+                        dadosOrigem[2], // estado
+                        dadosOrigem[3]  // cidade
+                );
+
+                Voo v = new Voo(codigoVoo, origem, destino, dataVoo);
+                voosLidos.add(v);
             }
+            return voosLidos;
         } finally {
-            if (leitor != null) {
+            if (leitor!=null){
                 leitor.close();
             }
         }
-
-        return voos;
     }
 }
