@@ -23,10 +23,10 @@ public class ProgramaVoo {
             int opcao;
             try {
                 opcao = read.nextInt();
-                read.nextLine(); // Consume the newline character
+                read.nextLine();
             } catch (InputMismatchException e) {
                 System.out.println("Por favor, digite um número válido.");
-                read.nextLine(); // Clear the invalid input
+                read.nextLine();
                 continue;
             }
 
@@ -70,7 +70,7 @@ public class ProgramaVoo {
                         DataSimples data = new DataSimples(dataPartes[0], dataPartes[1]);
 
                         sistema.cadastrarVoo(codigoVoo, origem, destino, data);
-                    } catch (VooInvalidoException e) {
+                    } catch (CodigoInvalidoException | OrigemInvalidaException | DestinoInvalidoException | DataInvalidaException e) {
                         System.out.println("Erro: " + e.getMessage());
                         System.out.println("Verifique se os dados foram inseridos de maneira correta.");
                     }

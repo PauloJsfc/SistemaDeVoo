@@ -19,19 +19,19 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         this.gravador = new GravadorDeVoo();
     }
 
-    public void cadastrarVoo(String codigoVoo, OrigemVoo origem, DestinoVoo destino, DataSimples data) throws VooInvalidoException{
+    public void cadastrarVoo(String codigoVoo, OrigemVoo origem, DestinoVoo destino, DataSimples data) throws CodigoInvalidoException, OrigemInvalidaException, DestinoInvalidoException, DataInvalidaException {
 
         if (codigoVoo == null || codigoVoo.isEmpty()) {
-            throw new VooInvalidoException("Código não encontrado");
+            throw new CodigoInvalidoException("Código não encontrado");
 
         }else if (origem == null){
-            throw new VooInvalidoException("Origem não encontrada");
+            throw new OrigemInvalidaException("Origem não encontrada");
 
         } else if (destino == null) {
-            throw new VooInvalidoException("Destino não encontrado");
+            throw new DestinoInvalidoException("Destino não encontrado");
 
         } else if (data == null) {
-            throw new VooInvalidoException("data inválida");
+            throw new DataInvalidaException("data inválida");
 
         }
 
@@ -295,7 +295,17 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
     public void recuperarVoos() throws IOException, VooInvalidoException {
         List<Voo> voosRecuperados = this.gravador.recuperarVoos();
         for (Voo v : voosRecuperados){
-            this.cadastrarVoo(v.getCodigoVoo(),v.getOrigem(),v.getDestino(),v.getData());
+            try {
+                this.cadastrarVoo(v.getCodigoVoo(),v.getOrigem(),v.getDestino(),v.getData());
+            } catch (CodigoInvalidoException e) {
+                throw new RuntimeException(e);
+            } catch (OrigemInvalidaException e) {
+                throw new RuntimeException(e);
+            } catch (DestinoInvalidoException e) {
+                throw new RuntimeException(e);
+            } catch (DataInvalidaException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
