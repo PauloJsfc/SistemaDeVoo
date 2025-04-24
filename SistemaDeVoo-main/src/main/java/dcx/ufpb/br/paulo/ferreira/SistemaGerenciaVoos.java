@@ -9,6 +9,6 @@ public interface SistemaGerenciaVoos {
     void buscarVoos() throws VooInvalidoException;
     boolean cancelaVoo() throws VooInvalidoException;
     void gravarVoos() throws IOException;
-    void recuperarVoos() throws IOException, VooInvalidoException;
+    void recuperarVoos() throws IOException, CodigoInvalidoException,OrigemInvalidaException,DestinoInvalidoException,DataInvalidaException;
 
 }

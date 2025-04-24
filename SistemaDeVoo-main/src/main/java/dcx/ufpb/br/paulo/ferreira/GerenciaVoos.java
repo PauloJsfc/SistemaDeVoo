@@ -292,20 +292,10 @@ public class GerenciaVoos implements SistemaGerenciaVoos{
         this.gravador.gravarVoo(this.voos);
     }
 
-    public void recuperarVoos() throws IOException, VooInvalidoException {
+    public void recuperarVoos() throws IOException, CodigoInvalidoException, OrigemInvalidaException, DestinoInvalidoException, DataInvalidaException  {
         List<Voo> voosRecuperados = this.gravador.recuperarVoos();
         for (Voo v : voosRecuperados){
-            try {
-                this.cadastrarVoo(v.getCodigoVoo(),v.getOrigem(),v.getDestino(),v.getData());
-            } catch (CodigoInvalidoException e) {
-                throw new RuntimeException(e);
-            } catch (OrigemInvalidaException e) {
-                throw new RuntimeException(e);
-            } catch (DestinoInvalidoException e) {
-                throw new RuntimeException(e);
-            } catch (DataInvalidaException e) {
-                throw new RuntimeException(e);
-            }
+            this.cadastrarVoo(v.getCodigoVoo(),v.getOrigem(),v.getDestino(),v.getData());
         }
     }
 
